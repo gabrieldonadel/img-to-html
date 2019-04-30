@@ -11,8 +11,11 @@ export function printStyle(colors) {
 
     colors.colors.forEach(c => {
     map[c] = getClass(counter);
+    let reg = new RegExp("[,:@]+");
     if (!isNaN(parseInt(map[c].charAt(0, 10)))){
-        style += `.\\3${(map[c]).charAt(0)} ${(map[c]).substring(1)}{background-color: ${c}}`
+        style += `.\\3${(map[c]).charAt(0)} ${(map[c]).substring(1)/*.replace(/([,:@])/g, '\\$1')*/}{background-color: ${c}}`
+    }else if(reg.test(map[c])){
+        style += `.${map[c].replace(/([,:@])/g, '\\$1')}{background-color: ${c}}`
     }else{
         style += `.${map[c]}{background-color: ${c}}`
     }
@@ -26,47 +29,94 @@ export function printStyle(colors) {
     
 export function printBody(img,map) {
     var body = "<div id='main'>";
-    var rowSize = img.width*4;
+    var rowSize = img.width*3;
+    var colorChannels = 3;
+    
+    //Check if is RGBA
+    if(img.data.length ==  (img.width*4*img.height)+img.height){
+        rowSize = img.width*4;
+        colorChannels = 4;
 
-    for(let i = 0; i<img.data.length-rowSize;i=i+rowSize){
-        body+='<r>';
-        let counter = 1;
-        for(let j = 0; j<rowSize;j=j+4){
-        let k = j+4;
-        let hex = rgbTohex([img.data[i+j],img.data[i+j+1],img.data[i+j+2],img.data[i+j+3]]);
-        let nextHex = (k < rowSize)?rgbTohex([img.data[i+k],img.data[i+k+1],img.data[i+k+2],img.data[i+k+3]]):null
-        if(hex == nextHex){
-            counter++;
-        }else if(counter>1){  
-
-            if(hex){
-                body +=`<hr class="${map[hex]} -${counter}">`
-            }else{
-                body +=`<hr class="-${counter}">`
+        for(let i = 0; i<img.data.length-rowSize;i=i+rowSize){
+            body+='<r>';
+            let counter = 1;
+            let hex;
+            let nextHex = rgbaTohex([img.data[i],img.data[i+1],img.data[i+2],img.data[i+3]]);
+            for(let j = 0; j<rowSize;j=j+colorChannels){
+                let k = j+colorChannels;
+                hex = nextHex;
+                nextHex = (k < rowSize)?rgbaTohex([img.data[i+k],img.data[i+k+1],img.data[i+k+2],img.data[i+k+3]]):null
+                if(hex == nextHex){
+                    counter++;
+                }else if(counter>1){  
+    
+                    if(hex){
+                        body +=`<hr class="${map[hex]} -${counter}">`
+                    }else{
+                        body +=`<hr class="-${counter}">`
+                    }
+                    counter = 1;
+    
+                }else{
+                    if(hex){
+                    body +=`<hr class="${map[hex]}">`
+                    }else{
+                    body +=`<hr>`
+                    }
+                    counter = 1;
+                }
+            
             }
-            counter = 1;
+            body+='</r>';
+        }
 
-        }else{
-            if(hex){
-            body +=`<hr class="${map[hex]}">`
-            }else{
-            body +=`<hr>`
+    }else{
+
+        for(let i = 0; i<img.data.length-rowSize;i=i+rowSize){
+            body+='<r>';
+            let counter = 1;
+            let hex;
+            let nextHex = rgbTohex([img.data[i],img.data[i+1],img.data[i+2]]);
+            for(let j = 0; j<rowSize;j=j+colorChannels){
+                let k = j+colorChannels;
+                hex = nextHex;
+                nextHex = (k < rowSize)?rgbTohex([img.data[i+k],img.data[i+k+1],img.data[i+k+2]]):null
+                if(hex == nextHex){
+                    counter++;
+                }else if(counter>1){  
+    
+                    if(hex){
+                        body +=`<hr class="${map[hex]} -${counter}">`
+                    }else{
+                        body +=`<hr class="-${counter}">`
+                    }
+                    counter = 1;
+    
+                }else{
+                    if(hex){
+                    body +=`<hr class="${map[hex]}">`
+                    }else{
+                    body +=`<hr>`
+                    }
+                    counter = 1;
+                }
+            
             }
-            counter = 1;
+            body+='</r>';
         }
-        
-        }
-        body+='</r>';
-    }
+
+    } 
+
+    
     body += "</div>"
     return body;
 }
 export function getClass(i){
-    return convertBase(i+"",10,36);
+    return convertBase(i+"",10,37);
 }
       
 export function convertBase(value, from_base, to_base) {
-    var range = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
+    var range = '0123456789abcdefghijklmnopqrstuvwxyz_:@,'.split('');
     var from_range = range.slice(0, from_base);
     var to_range = range.slice(0, to_base);
 
@@ -83,10 +133,18 @@ export function convertBase(value, from_base, to_base) {
     return new_value || '0';
 }
 
+export function rgbaTohex(array){
+    if(array[3] == 0){
+        return
+    }else if(array[3] != 255){
+        return "#" + componentToHex(array[0]) + componentToHex(array[1]) + componentToHex(array[2]) + componentToHex(array[3]);
+    }else{
+        return  "#" + componentToHex(array[0]) + componentToHex(array[1]) + componentToHex(array[2]);
+    
+    }
+}
 export function rgbTohex(array){
-    if(array[3] == 0) return
-    let res = "#" + componentToHex(array[0]) + componentToHex(array[1]) + componentToHex(array[2]);
-    return res;
+    return "#" + componentToHex(array[0]) + componentToHex(array[1]) + componentToHex(array[2]);
 }
 export function componentToHex(c) {
     var hex = c.toString(16);

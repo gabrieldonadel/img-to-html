@@ -1,7 +1,8 @@
 import React from 'react';
 import logo from './logo.svg';
 import './styles/App.scss';
-import {printBody, printStyle, rgbTohex} from './scripts/index'
+import {printBody, printStyle} from './scripts/index'
+import * as PNG from './scripts/png.js'
 import UPNG from 'upng-js'
 
 export default class App extends React.Component {
@@ -31,14 +32,17 @@ export default class App extends React.Component {
 
       if(file.type == "image/png"){
         var img  = UPNG.decode(buffArray);        // put ArrayBuffer of the PNG file into UPNG.decode
-
-        let colors = this.getColorPalett(img.data,img.width);
+        console.log('IMG', img, file)
+        
+        let fileName = file.name.substring(0, file.name.length-4)
+        let colors = PNG.getColorPalett(img.data,img.width,img.height);
         let styles = printStyle(colors)
         let body = printBody(img,styles.map);
         console.log('Paleta de cores ', colors)
+        
 
         let htmlFile = styles.style + body;
-        let res = <a className='button is-success' download="download.html" href={'data:text/plain;charset=utf-8,' + encodeURIComponent(htmlFile)}>Download</a>
+        let res = <a className='button is-success' download={fileName+".html"} href={window.URL.createObjectURL(new Blob([htmlFile], {type: 'text/plain'}))}>Download</a>
         this.setState({img:res, loading:false,error:false});
 
       }else{
@@ -59,7 +63,7 @@ export default class App extends React.Component {
           <p>
             IMG to HTML5 Converter
           </p>
-          <input type="file" id="fileInput"></input>
+          <input onClick={() => this.setState({img:null})} type="file" id="fileInput"></input>
           <a onClick={this.handleClick} className={buttonClass}>Convert</a>
           {this.state.img}
           {(this.state.error)?<p>We only support PNG at the moment</p>:null}
@@ -67,35 +71,5 @@ export default class App extends React.Component {
       </div>
     );
   }
- 
-
- getColorPalett(data,width){
-    var colors = [];
-    var length = [];
-
-    let hex = null;
-    let prevHex;
-    var rowSize = width*4;
-
-    for(let i = 0; i<data.length-rowSize;i=i+rowSize){
-      let colorCounter = 1;
-      for(let j = 0; j<rowSize;j=j+4){
-        let k = j+4;
-        let hex = rgbTohex([data[i+j],data[i+j+1],data[i+j+2],data[i+j+3]]);
-        let nextHex = (k < rowSize)?rgbTohex([data[i+k],data[i+k+1],data[i+k+2],data[i+k+3]]):null
-        if(hex == nextHex){
-            colorCounter++;
-        }else if(colorCounter>1){  
-          if(length.indexOf(colorCounter) === -1) length.push(colorCounter);
-          if(hex && colors.indexOf(hex) === -1) colors.push(hex);
-          colorCounter = 1;
-        }else{
-          if(hex && colors.indexOf(hex) === -1) colors.push(hex);
-        }
-      }
-    }
-    return {colors:colors,length:length}
- }
-
 }
 
