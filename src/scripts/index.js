@@ -33,19 +33,19 @@ export function printBody(img,map) {
     var colorChannels = 3;
     
     //Check if is RGBA
-    if(img.data.length ==  (img.width*4*img.height)+img.height){
+    if(img.data.length ==  (img.width*4*img.height)+img.height || img.data.length ==  (img.width*4*img.height)){
         rowSize = img.width*4;
         colorChannels = 4;
 
-        for(let i = 0; i<img.data.length-rowSize;i=i+rowSize){
+        for(var i = 0; i<img.data.length-rowSize;i=i+rowSize){
             body+='<r>';
             let counter = 1;
             let hex;
-            let nextHex = rgbaTohex([img.data[i],img.data[i+1],img.data[i+2],img.data[i+3]]);
-            for(let j = 0; j<rowSize;j=j+colorChannels){
+            let nextHex = rgbaTohex(img.data[i],img.data[i+1],img.data[i+2],img.data[i+3]);
+            for(var j = 0; j<rowSize;j=j+colorChannels){
                 let k = j+colorChannels;
                 hex = nextHex;
-                nextHex = (k < rowSize)?rgbaTohex([img.data[i+k],img.data[i+k+1],img.data[i+k+2],img.data[i+k+3]]):null
+                nextHex = (k < rowSize)?rgbaTohex(img.data[i+k],img.data[i+k+1],img.data[i+k+2],img.data[i+k+3]):null
                 if(hex == nextHex){
                     counter++;
                 }else if(counter>1){  
@@ -72,15 +72,15 @@ export function printBody(img,map) {
 
     }else{
 
-        for(let i = 0; i<img.data.length-rowSize;i=i+rowSize){
+        for(var i = 0; i<img.data.length-rowSize;i=i+rowSize){
             body+='<r>';
             let counter = 1;
             let hex;
-            let nextHex = rgbTohex([img.data[i],img.data[i+1],img.data[i+2]]);
-            for(let j = 0; j<rowSize;j=j+colorChannels){
-                let k = j+colorChannels;
+            let nextHex = rgbTohex(img.data[i],img.data[i+1],img.data[i+2]);
+            for(var j = 0; j<rowSize;j=j+colorChannels){
+                var k = j+colorChannels;
                 hex = nextHex;
-                nextHex = (k < rowSize)?rgbTohex([img.data[i+k],img.data[i+k+1],img.data[i+k+2]]):null
+                nextHex = (k < rowSize)?rgbTohex(img.data[i+k],img.data[i+k+1],img.data[i+k+2]):null
                 if(hex == nextHex){
                     counter++;
                 }else if(counter>1){  
@@ -133,18 +133,28 @@ export function convertBase(value, from_base, to_base) {
     return new_value || '0';
 }
 
-export function rgbaTohex(array){
-    if(array[3] == 0){
-        return
-    }else if(array[3] != 255){
-        return "#" + componentToHex(array[0]) + componentToHex(array[1]) + componentToHex(array[2]) + componentToHex(array[3]);
-    }else{
-        return  "#" + componentToHex(array[0]) + componentToHex(array[1]) + componentToHex(array[2]);
-    
+export function rgbaTohex(r,g,b,a){
+
+    switch (a){
+        case 0:
+            return;
+        case 255:
+            return  "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        default:    
+            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b) + componentToHex(a);
     }
+    
+    /*if(a == 0){
+        return
+    }else if(a != 255){
+        return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b) + componentToHex(a);
+    }else{
+        return  "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    
+    }*/
 }
-export function rgbTohex(array){
-    return "#" + componentToHex(array[0]) + componentToHex(array[1]) + componentToHex(array[2]);
+export function rgbTohex(r,g,b){
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 export function componentToHex(c) {
     var hex = c.toString(16);

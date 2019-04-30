@@ -3,7 +3,9 @@ import logo from './logo.svg';
 import './styles/App.scss';
 import {printBody, printStyle} from './scripts/index'
 import * as PNG from './scripts/png.js'
+import * as JPG from './scripts/jpg.js'
 import UPNG from 'upng-js'
+import jpeg from 'jpeg-js';
 
 export default class App extends React.Component {
   
@@ -45,6 +47,21 @@ export default class App extends React.Component {
         let res = <a className='button is-success' download={fileName+".html"} href={window.URL.createObjectURL(new Blob([htmlFile], {type: 'text/plain'}))}>Download</a>
         this.setState({img:res, loading:false,error:false});
 
+      }else if(file.type == "image/jpeg"){
+        var img = jpeg.decode(buffArray);
+        console.log(img)
+
+        let fileName = file.name.substring(0, file.name.length-4)
+        let colors = JPG.getColorPalett(img.data,img.width,img.height);
+        let styles = printStyle(colors)
+        let body = printBody(img,styles.map);
+        console.log('Paleta de cores ', colors)
+        
+
+        let htmlFile = styles.style + body;
+        let res = <a className='button is-success' download={fileName+".html"} href={window.URL.createObjectURL(new Blob([htmlFile], {type: 'text/plain'}))}>Download</a>
+        this.setState({img:res, loading:false,error:false});
+
       }else{
         this.setState({error:true, loading:false})
       }
@@ -63,10 +80,10 @@ export default class App extends React.Component {
           <p>
             IMG to HTML5 Converter
           </p>
-          <input onClick={() => this.setState({img:null})} type="file" id="fileInput"></input>
+          <input onClick={() => this.setState({img:null})} type="file" id="fileInput"  accept=".jpg,.jpeg,.png,.doni"></input>
           <a onClick={this.handleClick} className={buttonClass}>Convert</a>
           {this.state.img}
-          {(this.state.error)?<p>We only support PNG at the moment</p>:null}
+          {(this.state.error)?<p>We only support PNG and JPEG at the moment</p>:null}
         </header>
       </div>
     );
